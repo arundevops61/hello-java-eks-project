@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "yourdockerhub/hello-java-app"
+    }
+
+    stages {
+
+        stage('Build Maven') {
+            steps {
+                dir('app') {
+                    sh 'mvn clean package'
+                }
+            }
+        }
+
+        stage('Build Docker') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME -f docker/Dockerfile .'
+            }
+        }
+
+        stage('Push Docker') {
+            steps {
+                sh 'docker push $IMAGE_NAME'
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f k8s/deployment.yaml'
+                sh 'kubectl apply -f k8s/service.yaml'
+            }
+        }
+    }
+}
